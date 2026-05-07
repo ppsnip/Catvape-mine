@@ -4253,6 +4253,8 @@ run(function()
 		return 
 	end
 	
+	local NoYPred
+	local AntiGround
 	local ProjectileAimbot; ProjectileAimbot = vape.Categories.Blatant:CreateModule({
 		Name = 'Projectile Aimbot',
 		Disabled = not canDebug,
@@ -4311,8 +4313,16 @@ run(function()
 	
 						local targetpos = getPosition(plr.Character) or plr[TargetPart.Value].Position
 						local newlook = CFrame.new(offsetpos, targetpos) * CFrame.new(projmeta.projectile == 'owl_projectile' and Vector3.zero or Vector3.new(bedwars.BowConstantsTable.RelX, bedwars.BowConstantsTable.RelY, bedwars.BowConstantsTable.RelZ))
-						local calc = prediction.SolveTrajectory(newlook.p, projSpeed * Prediction.Value, gravity, targetpos, projmeta.projectile == 'telepearl' and Vector3.zero or plr.RootPart.Velocity, playerGravity, plr.HipHeight, plr.Jumping and 42.6 or nil, rayCheck)
+						local aimVelocity = projmeta.projectile == 'telepearl' and Vector3.zero or plr.RootPart.Velocity
+						if NoYPred.Enabled then aimVelocity = Vector3.new(aimVelocity.X, 0, aimVelocity.Z) end
+						local calc = prediction.SolveTrajectory(newlook.p, projSpeed * Prediction.Value, gravity, targetpos, aimVelocity, playerGravity, plr.HipHeight, plr.Jumping and 42.6 or nil, rayCheck)
 						if calc then
+							if AntiGround.Enabled then
+								local gcheck = RaycastParams.new()
+								gcheck.FilterDescendantsInstances = {plr.Character}
+								gcheck.FilterType = Enum.RaycastFilterType.Exclude
+								if workspace:Raycast(calc, Vector3.new(0, -(plr.HipHeight + 0.5), 0), gcheck) then return old(...) end
+							end
 							targetinfo.Targets[plr] = tick() + 1
 							return {
 								initialVelocity = CFrame.new(newlook.Position, calc).LookVector * (projSpeed * (AutoCharge.Enabled and 1 or projmeta.velocityMultiplier)),
@@ -4340,7 +4350,9 @@ run(function()
 					})
 
 					if plr then
-						local calc = prediction.SolveTrajectory(origin, 100, 20, plr[TargetPart.Value].Position, plr.RootPart.Velocity, workspace.Gravity, plr.HipHeight, plr.Jumping and 42.6 or nil)
+						local bkVelocity = plr.RootPart.Velocity
+						if NoYPred.Enabled then bkVelocity = Vector3.new(bkVelocity.X, 0, bkVelocity.Z) end
+						local calc = prediction.SolveTrajectory(origin, 100, 20, plr[TargetPart.Value].Position, bkVelocity, workspace.Gravity, plr.HipHeight, plr.Jumping and 42.6 or nil)
 
 						if calc then
 							for i, v in debug.getstack(2) do
@@ -4405,6 +4417,14 @@ run(function()
 				Blacklist.Object.Visible = call
 			end
 		end
+	})
+	NoYPred = ProjectileAimbot:CreateToggle({
+		Name = 'No Y Prediction',
+		Tooltip = 'Ignores vertical velocity — useful against jumping targets'
+	})
+	AntiGround = ProjectileAimbot:CreateToggle({
+		Name = 'Anti Ground Shot',
+		Tooltip = 'Cancels shot if predicted aim point is near the ground'
 	})
 	Blacklist = ProjectileAimbot:CreateTextList({
 		Name = 'Blacklist',
