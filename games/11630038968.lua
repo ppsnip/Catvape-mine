@@ -637,6 +637,11 @@ run(function()
 	local rayCheck = RaycastParams.new()
 	rayCheck.FilterType = Enum.RaycastFilterType.Exclude
 	
+	local NoYPred
+	local AntiGround
+	local groundCheck = RaycastParams.new()
+	groundCheck.FilterType = Enum.RaycastFilterType.Exclude
+
 	local function aimFunction(...)
 		local plr = entitylib.EntityMouse({
 	        Range = FOV.Value,
@@ -648,9 +653,19 @@ run(function()
 	        rayCheck.FilterDescendantsInstances = {plr.Character, gameCamera}
 	        rayCheck.CollisionGroup = plr[TargetPart.Value].CollisionGroup
 	        local offsetpos = entitylib.character.Head.CFrame
-	        local calc = prediction.SolveTrajectory(offsetpos.Position, 180, 60, plr[TargetPart.Value].Position, plr[TargetPart.Value].Velocity, workspace.Gravity, plr.HipHeight, nil, rayCheck)
+	        local velocity = plr[TargetPart.Value].Velocity
+	        if NoYPred.Enabled then
+	            velocity = Vector3.new(velocity.X, 0, velocity.Z)
+	        end
+	        local calc = prediction.SolveTrajectory(offsetpos.Position, 180, 60, plr[TargetPart.Value].Position, velocity, workspace.Gravity, plr.HipHeight, nil, rayCheck)
 	
 	        if calc then
+	            if AntiGround.Enabled then
+	                groundCheck.FilterDescendantsInstances = {plr.Character}
+	                if workspace:Raycast(calc, Vector3.new(0, -(plr.HipHeight + 0.5), 0), groundCheck) then
+	                    return old(...)
+	                end
+	            end
 	            targetinfo.Targets[plr] = tick() + 1
 	            return offsetpos.Position + CFrame.new(offsetpos.Position, calc).LookVector * 100
 	        end
@@ -682,6 +697,14 @@ run(function()
 		Min = 1,
 		Max = 1000,
 		Default = 1000
+	})
+	NoYPred = ProjectileAimbot:CreateToggle({
+		Name = 'No Y Prediction',
+		Tooltip = 'Ignores vertical velocity — useful against jumping targets'
+	})
+	AntiGround = ProjectileAimbot:CreateToggle({
+		Name = 'Anti Ground Shot',
+		Tooltip = 'Cancels shot if predicted aim point is near the ground'
 	})
 end)
 	
