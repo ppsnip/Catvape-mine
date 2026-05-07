@@ -1518,18 +1518,6 @@ run(function()
 			ProjectileAntiGround.Object.Visible = callback
 		end
 	})
-	ProjectileNoYPred = SilentAim:CreateToggle({
-		Name = 'No Y Prediction',
-		Tooltip = 'Ignores vertical velocity when predicting — useful against targets jumping erratically',
-		Darker = true,
-		Visible = false
-	})
-	ProjectileAntiGround = SilentAim:CreateToggle({
-		Name = 'Anti Ground Shot',
-		Tooltip = 'Cancels the shot if the predicted aim point is near the ground — prevents wasted shots',
-		Darker = true,
-		Visible = false
-	})
 	ProjectileSpeed = SilentAim:CreateSlider({
 		Name = 'Speed',
 		Min = 1,
@@ -1546,6 +1534,18 @@ run(function()
 		Min = 0,
 		Max = 192.6,
 		Default = 192.6,
+		Darker = true,
+		Visible = false
+	})
+	ProjectileNoYPred = SilentAim:CreateToggle({
+		Name = 'No Y Prediction',
+		Tooltip = 'Ignores vertical velocity when predicting',
+		Darker = true,
+		Visible = false
+	})
+	ProjectileAntiGround = SilentAim:CreateToggle({
+		Name = 'Anti Ground Shot',
+		Tooltip = 'Cancels shot if predicted aim point is near the ground',
 		Darker = true,
 		Visible = false
 	})
@@ -8158,11 +8158,7 @@ run(function()
 		Name = 'FPS Cap',
 		Min = 30,
 		Max = 480,
-		Decimal = 1,
 		Default = 240,
-		Suffix = function(val)
-			return 'fps'
-		end,
 		Function = function(val)
 			if FPSUnlocker.Enabled and setfpscap then
 				setfpscap(val)
